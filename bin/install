@@ -26,7 +26,7 @@ echo "$password" > $OPENSHIFT_WILDFLY_DIR/env/OPENSHIFT_KEYCLOAK_PASSWORD
 
 update-configuration java8
 
-$OPENSHIFT_WILDFLY_DIR/bin/add-user.sh --user ${username} --password ${password}
+$OPENSHIFT_WILDFLY_DIR/bin/add-user-keycloak.sh --user ${username} --password ${password}
 
 client_result ""
 client_result "Keycloak administrator added.  Please make note of these credentials:"
