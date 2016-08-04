@@ -12,7 +12,6 @@ echo "$version" > "$OPENSHIFT_WILDFLY_DIR/env/OPENSHIFT_WILDFLY_VERSION"
 ln -s ${OPENSHIFT_WILDFLY_DIR}/standalone/log ${OPENSHIFT_WILDFLY_DIR}/logs
 
 shopt -s dotglob
-cp ${OPENSHIFT_WILDFLY_DIR}/standalone/configuration/standalone.xml ${OPENSHIFT_WILDFLY_DIR}/template/.openshift/config/standalone.xml
 
 username=$(generate_username)
 password=$(generate_password)
