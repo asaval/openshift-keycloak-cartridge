@@ -21,7 +21,7 @@
 
 <module xmlns="urn:jboss:module:1.3" name="org.keycloak.keycloak-authz-policy-drools">
     <resources>
-        <resource-root path="keycloak-authz-policy-drools-2.0.0.Final.jar"/>
+        <resource-root path="keycloak-authz-policy-drools-2.1.0.CR1.jar"/>
     </resources>
     <dependencies>
         <module name="javax.api"/>

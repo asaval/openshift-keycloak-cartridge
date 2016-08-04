@@ -21,7 +21,7 @@
     </properties>
 
     <resources>
-        <resource-root path="keycloak-wildfly-extensions-2.0.0.Final.jar"/>
+        <resource-root path="keycloak-wildfly-extensions-2.1.0.CR1.jar"/>
     </resources>
 
     <dependencies>

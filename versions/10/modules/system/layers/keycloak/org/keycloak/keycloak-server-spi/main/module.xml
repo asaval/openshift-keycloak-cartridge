@@ -21,7 +21,7 @@
     </properties>
 
     <resources>
-        <resource-root path="keycloak-server-spi-2.0.0.Final.jar"/>
+        <resource-root path="keycloak-server-spi-2.1.0.CR1.jar"/>
     </resources>
 
     <dependencies>
@@ -32,5 +32,6 @@
         <module name="javax.api"/>
         <module name="javax.ws.rs.api"/>
         <module name="org.apache.httpcomponents"/>
+        <module name="org.jboss.resteasy.resteasy-jaxrs"/>
     </dependencies>
 </module>
