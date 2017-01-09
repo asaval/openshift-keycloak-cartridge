@@ -23,13 +23,14 @@
     </properties>
 
     <resources>
-        <resource-root path="keycloak-wildfly-adduser-2.1.0.Final.jar"/>
+        <resource-root path="keycloak-wildfly-adduser-2.5.0.Final.jar"/>
     </resources>
 
     <dependencies>
         <module name="org.keycloak.keycloak-common"/>
         <module name="org.keycloak.keycloak-core"/>
         <module name="org.keycloak.keycloak-server-spi"/>
+        <module name="org.keycloak.keycloak-server-spi-private"/>
         <module name="org.jboss.aesh"/>
         <module name="org.jboss.as.domain-management"/>
         <module name="com.fasterxml.jackson.core.jackson-core"/>

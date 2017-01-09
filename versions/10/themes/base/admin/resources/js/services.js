@@ -191,6 +191,51 @@ module.factory('Notifications', function($rootScope, $timeout) {
 	return notifications;
 });
 
+
+module.factory('ComponentUtils', function() {
+
+    var utils = {};
+
+    utils.addLastEmptyValueToMultivaluedLists = function(properties, config) {
+        if (!properties) {
+            return;
+        }
+
+        for (var i=0 ; i<properties.length ; i++) {
+            var prop = properties[i];
+            if (prop.type === 'MultivaluedString') {
+                var configProperty = config[prop.name];
+
+                if (configProperty == null) {
+                    configProperty = [];
+                    config[prop.name] = configProperty;
+                }
+
+                if (configProperty.length == 0 || configProperty[configProperty.length - 1].length > 0) {
+                    configProperty.push('');
+                }
+            }
+        }
+    }
+
+
+    utils.removeLastEmptyValue = function(componentConfig) {
+
+        for (var configPropertyName in componentConfig) {
+            var configVal = componentConfig[configPropertyName];
+            if (configVal && configVal.length > 0) {
+                var lastVal = configVal[configVal.length - 1];
+                if (lastVal === '') {
+                    console.log('Remove empty value from config property: ' + configPropertyName);
+                    configVal.splice(configVal.length - 1, 1);
+                }
+            }
+        }
+    }
+
+    return utils;
+});
+
 module.factory('Realm', function($resource) {
 	return $resource(authUrl + '/admin/realms/:id', {
 		id : '@realm'
@@ -203,6 +248,12 @@ module.factory('Realm', function($resource) {
             params : { id : ''}
         }
 
+    });
+});
+
+module.factory('RealmKeys', function($resource) {
+    return $resource(authUrl + '/admin/realms/:id/keys', {
+        id : '@realm'
     });
 });
 
@@ -274,7 +325,7 @@ module.service('ServerInfo', function($resource, $q, $http) {
     var delay = $q.defer();
 
     $http.get(authUrl + '/admin/serverinfo').success(function(data) {
-        info = data;
+        angular.copy(data, info);
         delay.resolve(info);
     });
 
@@ -297,7 +348,6 @@ module.factory('ClientInitialAccess', function($resource) {
         id : '@id'
     });
 });
-
 
 module.factory('ClientProtocolMapper', function($resource) {
     return $resource(authUrl + '/admin/realms/:realm/clients/:client/protocol-mappers/models/:id', {
@@ -334,58 +384,18 @@ module.factory('User', function($resource) {
     });
 });
 
-module.factory('UserFederationInstances', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:instance', {
-        realm : '@realm',
-        instance : '@instance'
-    },  {
-        update : {
-            method : 'PUT'
-        }
-    });
+module.service('UserSearchState', function() {
+    this.isFirstSearch = true;
+    this.query = {
+        max : 20,
+        first : 0
+    };
 });
 
-module.factory('UserFederationProviders', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/providers/:provider', {
-        realm : '@realm',
-        provider : "@provider"
-    });
+// Service tracks the last flow selected in Authentication-->Flows tab
+module.service('LastFlowSelected', function() {
+    this.alias = null;
 });
-
-module.factory('UserFederationSync', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:provider/sync');
-});
-
-module.factory('UserFederationMapperTypes', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:provider/mapper-types', {
-        realm : '@realm',
-        provider : '@provider'
-    });
-});
-
-module.factory('UserFederationMappers', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:provider/mappers', {
-        realm : '@realm',
-        provider : '@provider'
-    });
-});
-
-module.factory('UserFederationMapper', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:provider/mappers/:mapperId', {
-        realm : '@realm',
-        provider : '@provider',
-        mapperId: '@mapperId'
-    }, {
-        update: {
-            method : 'PUT'
-        }
-    });
-});
-
-module.factory('UserFederationMapperSync', function($resource) {
-    return $resource(authUrl + '/admin/realms/:realm/user-federation/instances/:provider/mappers/:mapperId/sync');
-});
-
 
 module.factory('UserSessionStats', function($resource) {
     return $resource(authUrl + '/admin/realms/:realm/users/:user/session-stats', {
@@ -463,6 +473,15 @@ module.factory('UserCredentials', function($resource) {
     }).update;
 
     credentials.removeTotp = $resource(authUrl + '/admin/realms/:realm/users/:userId/remove-totp', {
+        realm : '@realm',
+        userId : '@userId'
+    }, {
+        update : {
+            method : 'PUT'
+        }
+    }).update;
+
+    credentials.disableCredentialTypes = $resource(authUrl + '/admin/realms/:realm/users/:userId/disable-credential-types', {
         realm : '@realm',
         userId : '@userId'
     }, {
@@ -605,6 +624,12 @@ module.factory('RealmClearUserCache', function($resource) {
 
 module.factory('RealmClearRealmCache', function($resource) {
     return $resource(authUrl + '/admin/realms/:realm/clear-realm-cache', {
+        realm : '@realm'
+    });
+});
+
+module.factory('RealmClearKeysCache', function($resource) {
+    return $resource(authUrl + '/admin/realms/:realm/clear-keys-cache', {
         realm : '@realm'
     });
 });
@@ -1629,3 +1654,65 @@ module.factory('DefaultGroups', function($resource) {
         }
     });
 });
+
+module.factory('SubComponentTypes', function($resource) {
+    return $resource(authUrl + '/admin/realms/:realm/components/:componentId/sub-component-types', {
+        realm: '@realm',
+        componentId: '@componentId'
+    });
+});
+
+module.factory('Components', function($resource, ComponentUtils) {
+    return $resource(authUrl + '/admin/realms/:realm/components/:componentId', {
+        realm : '@realm',
+        componentId : '@componentId'
+    }, {
+        update : {
+            method : 'PUT',
+            transformRequest: function(componentInstance) {
+
+                if (componentInstance.config) {
+                    ComponentUtils.removeLastEmptyValue(componentInstance.config);
+                }
+
+                return angular.toJson(componentInstance);
+            }
+        },
+        save : {
+            method : 'POST',
+            transformRequest: function(componentInstance) {
+
+                if (componentInstance.config) {
+                    ComponentUtils.removeLastEmptyValue(componentInstance.config);
+                }
+
+                return angular.toJson(componentInstance);
+            }
+        }
+    });
+});
+
+module.factory('UserStorageSync', function($resource) {
+    return $resource(authUrl + '/admin/realms/:realm/user-storage/:componentId/sync', {
+        realm : '@realm',
+        componentId : '@componentId'
+    });
+});
+
+module.factory('ClientRegistrationPolicyProviders', function($resource) {
+    return $resource(authUrl + '/admin/realms/:realm/client-registration-policy/providers', {
+        realm : '@realm',
+    });
+});
+
+module.factory('LDAPMapperSync', function($resource) {
+    return $resource(authUrl + '/admin/realms/:realm/user-storage/:parentId/mappers/:mapperId/sync', {
+        realm : '@realm',
+        componentId : '@componentId',
+        mapperId: '@mapperId'
+    });
+});
+
+
+
+
